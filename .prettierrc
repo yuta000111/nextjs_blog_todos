@@ -1,0 +1,10 @@
+{
+    "printWidth": 60,
+    "trailingComma": "es5",
+    "Semicolons": true,
+    "singleQuote": true,
+    "jsxBracketSameLine": true,
+    "emmet.includeLanguages": {
+        "javascript": "javascriptreact"
+    }
+}
