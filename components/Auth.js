@@ -1,6 +1,82 @@
+/* eslint-disable no-undef */
 /* eslint-disable @next/next/no-img-element */
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import Cookie from 'universal-cookie';
 import { LockClosedIcon } from '@heroicons/react/solid';
+
+const cookie = new Cookie();
+
 export default function Auth() {
+  const router = useRouter();
+  const [username, setUsename] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+
+  const login = async () => {
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_RESTAPI_URL}api/auth/jwt/create/`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            username: username,
+            password: password,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+        .then((res) => {
+          if (res.status === 400) {
+            throw 'authentication failed';
+          } else if (res.ok) {
+            return res.json();
+          }
+        })
+        .then((data) => {
+          const options = { path: '/' };
+          cookie.set('access_token', data.access, options);
+        });
+      router.push('/main-page');
+    } catch (err) {
+      alert(err);
+    }
+  };
+
+  const authUser = async (e) => {
+    e.preventDefault();
+    if (isLogin) {
+      login();
+    } else {
+      try {
+        await fetch(
+          `${process.env.NEXT_PUBLIC_RESTAPI_URL}api/register/`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              username: username,
+              password: password,
+            }),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        ).then((res) => {
+          if (res.status === 400) {
+            throw 'authentication failed';
+          } else if (res.ok) {
+            return res.json();
+          }
+        });
+        login();
+      } catch (err) {
+        alert(err);
+      }
+    }
+  };
+
   return (
     <>
       <div className="max-w-md w-full space-y-8">
@@ -10,8 +86,8 @@ export default function Auth() {
             src="https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg"
             alt="Workflow"
           />
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white-900">
-            Sign in to your account
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+            {isLogin ? 'Login' : 'Sign up'}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
@@ -24,8 +100,7 @@ export default function Auth() {
         </div>
         <form
           className="mt-8 space-y-6"
-          action="#"
-          method="POST">
+          onSubmit={authUser}>
           <input
             type="hidden"
             name="remember"
@@ -34,42 +109,40 @@ export default function Auth() {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
+                name="username"
+                type="text"
+                autoComplete="username"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => {
+                  setUsename(e.target.value);
+                }}
               />
             </div>
             <div>
               <input
-                id="password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                }}
               />
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-            </div>
-
             <div className="text-sm">
               <span
                 href="#"
-                className="cusor-pointer font-medium text-indigo-600 hover:text-white-500">
-                Change mode
+                className="cursor-pointer font-medium text-white hover:text-indigo-500"
+                onClick={() => setIsLogin(!isLogin)}>
+                Change mode ?
               </span>
             </div>
           </div>
@@ -84,7 +157,9 @@ export default function Auth() {
                   aria-hidden="true"
                 />
               </span>
-              Sign in
+              {isLogin
+                ? 'Login with JWT'
+                : 'Create new user'}
             </button>
           </div>
         </form>
