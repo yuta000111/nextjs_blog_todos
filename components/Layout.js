@@ -9,7 +9,7 @@ export default function Layout({
       <Head>
         <title>{title}</title>
       </Head>
-      <main className="flex flex-1 justify-center items-center w-screen flex-col">
+      <main className="flex flex-1 justify-center items-center w-screen flex-col text-white">
         {children}
       </main>
       <footer>@2021 12</footer>
