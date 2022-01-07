@@ -1,8 +1,26 @@
 import Layout from '../components/Layout';
 import Link from 'next/link';
-export default function TaskPage() {
+import { getAllTasksData } from '../lib/tasks';
+import Task from '../components/task';
+import useSWR from 'swr';
+
+const fetcher = (url) =>
+  fetch(url).then((res) => res.json());
+const apiUrl = `${process.env.NEXT_PUBLIC_RESTAPI_URL}api/list-task/`;
+
+export default function TaskPage({ staticfillterdTasks }) {
+  const { data: tasks, mutate } = useSWR(apiUrl, fetcher, {
+    fallbackData: staticfillterdTasks,
+  });
+
   return (
     <Layout title="Task Page">
+      <ul>
+        {staticfillterdTasks &&
+          staticfillterdTasks.map((task) => (
+            <Task key={task.id} task={task} />
+          ))}
+      </ul>
       <Link href="/main-page" passHref>
         <div className="flex cursor-pointer mt-12 text-white">
           <svg
@@ -21,4 +39,11 @@ export default function TaskPage() {
       </Link>
     </Layout>
   );
+}
+
+export async function getStaticProps() {
+  const staticfillterdTasks = await getAllTasksData();
+  return {
+    props: { staticfillterdTasks },
+  };
 }
